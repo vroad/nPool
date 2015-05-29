@@ -11,6 +11,7 @@
             './source/json_utility.cc',
             './source/callback_queue.cc',
             './source/utilities.cc',
+            './source/ndlopen.cc',
             './source/nrequire.cc',
             './source/isolate_context.cc'
         ],

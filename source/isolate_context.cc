@@ -5,6 +5,7 @@
 
 // Custom
 #include "nrequire.h"
+#include "ndlopen.h"
 #include "json_utility.h"
 
 static NAN_METHOD(ConsoleLog)
@@ -64,6 +65,14 @@ void IsolateContext::CreateGlobalContext(Handle<Object> globalContext)
 
     // attach object to context
     globalContext->Set(NanNew<String>("console"), consoleObject);
+
+    // get handle to nDLOpen function
+    Local<FunctionTemplate> dlOpenFunctionTemplate = NanNew<FunctionTemplate>(DLOpen::DLOpenFunction);
+    Local<Function> dlOpenFunction = dlOpenFunctionTemplate->GetFunction();
+    dlOpenFunction->SetName(NanNew<String>("dlopen"));
+    
+    // attach dlopen function to context
+    globalContext->Set(NanNew<String>("dlopen"), dlOpenFunction);
 
 }
 
