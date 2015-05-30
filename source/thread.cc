@@ -167,7 +167,7 @@ THREAD_WORK_ITEM* Thread::BuildWorkItem(Handle<Object> v8Object)
         workItem->workFunction = Utilities::CreateCharBuffer(workFunction);
 
         // generate JSON c str of param object
-        workItem->workParam = JsonUtility::Stringify(workParam);
+        workItem->workParam = createDataFromValue(workParam);
 
         // callback context
         NanAssignPersistent(workItem->callbackContext, callbackContext);
@@ -176,7 +176,7 @@ THREAD_WORK_ITEM* Thread::BuildWorkItem(Handle<Object> v8Object)
         NanAssignPersistent(workItem->callbackFunction, callbackFunction);
 
         // register external memory
-        int bytesAlloc = (workItem->workParam->length() + 1) + strlen(workItem->workFunction);
+        int bytesAlloc = /*(workItem->workParam->length() + 1)*/ + strlen(workItem->workFunction);
         NanAdjustExternalMemory(bytesAlloc);
     }
 
@@ -247,7 +247,7 @@ void* Thread::WorkItemFunction(TASK_QUEUE_WORK_DATA *taskData, void *threadConte
         if(workItem->isError == false)
         {
             // get work param
-            Handle<Value> workParam = JsonUtility::Parse(**(workItem->workParam));
+            Handle<Value> workParam = workItem->workParam->GetV8Value();
 
             // get worker function name
             Handle<Value> workerFunction = workerObject->Get(NanNew<String>(workItem->workFunction));
@@ -265,11 +265,13 @@ void* Thread::WorkItemFunction(TASK_QUEUE_WORK_DATA *taskData, void *threadConte
             else
             {
                 // strinigfy callback object
-                workItem->callbackObject = JsonUtility::Stringify(workResult->ToObject());
+                workItem->callbackObject = createDataFromValue(workResult);
                 workItem->isError = false;
 
                 // register external memory
+#if 0
                 NanAdjustExternalMemory(workItem->callbackObject->length() + 1);
+#endif
             }
         }
 
@@ -333,7 +335,7 @@ void Thread::uvAsyncCallback(uv_async_t* handle, int status)
         else
         {
             // parse stringified result
-            callbackObject = JsonUtility::Parse(**(workItem->callbackObject));
+            callbackObject = workItem->callbackObject->GetV8Value();
         }
 
         //create arguments array
@@ -434,11 +436,13 @@ void Thread::DisposeWorkItem(THREAD_WORK_ITEM* workItem, bool freeWorkItem)
     NanDisposePersistent(workItem->callbackFunction);
 
     // de-register memory
-    int bytesToFree = (workItem->workParam->length() + 1) + strlen(workItem->workFunction);
+    int bytesToFree = /*(workItem->workParam->length() + 1) +*/ strlen(workItem->workFunction);
+#if 0
     if(workItem->callbackObject != NULL)
     {
         bytesToFree += (workItem->callbackObject->length() + 1);
     }
+#endif
     NanAdjustExternalMemory(-bytesToFree);
 
     // un-alloc the memory

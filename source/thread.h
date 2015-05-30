@@ -24,6 +24,7 @@ using namespace v8;
 #include "thread_pool.h"
 
 #include "persistent_wrap.h"
+#include "structure.h"
 
 // thread module map
 typedef unordered_map<uint32_t, PersistentWrap*> ThreadModuleMap;
@@ -48,12 +49,12 @@ typedef struct THREAD_WORK_ITEM_STRUCT
     uint32_t                workId;
     uint32_t                fileKey;
     char*                   workFunction;
-    NanUtf8String*          workParam;
+    IData*                  workParam;
 
     // callback and output object/function
     Persistent<Object>      callbackContext;
     Persistent<Function>    callbackFunction;
-    NanUtf8String*          callbackObject;
+    IData*                  callbackObject;
 
     // indicates error
     bool                    isError;
