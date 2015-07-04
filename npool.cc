@@ -126,6 +126,15 @@ NAN_METHOD(DestoryThreadPool)
    NanReturnUndefined();
 }
 
+NAN_METHOD(DestroyIsolates)
+{
+	NanScope();
+
+	Thread::DestroyIsolates();
+
+	NanReturnUndefined();
+}
+
 NAN_METHOD(LoadFile)
 {
     //fprintf(stdout, "[%u] nPool - LoadFile\n", SyncGetThreadId());
@@ -220,6 +229,9 @@ void init(Handle<Object> exports)
 
     exports->Set(NanNew<String>("destroyThreadPool"),
       NanNew<FunctionTemplate>(DestoryThreadPool)->GetFunction());
+
+	exports->Set(NanNew<String>("destroyIsolates"),
+		NanNew<FunctionTemplate>(DestroyIsolates)->GetFunction());
 
     exports->Set(NanNew<String>("loadFile"),
       NanNew<FunctionTemplate>(LoadFile)->GetFunction());

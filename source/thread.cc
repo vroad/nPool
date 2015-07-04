@@ -12,11 +12,15 @@
 #include "callback_queue.h"
 #include "isolate_context.h"
 
+#include <mutex>
+
 // file loader and hash (npool.cc)
 static FileManager *fileManager = &(FileManager::GetInstance());
 
 // callback queue
 static CallbackQueue *callbackQueue = &(CallbackQueue::GetInstance());
+static std::mutex removedIsolatesMutex;
+static std::vector<Isolate*> removedIsolates;
 
 void* Thread::ThreadInit()
 {
@@ -111,10 +115,14 @@ void Thread::ThreadDestroy(void* threadContext)
     }
 
     // exit the isolate
-    isolate->Exit();
+	isolate->Exit();
 
-    // Dispose of the isolate
-    ((Isolate *)(thisContext->threadIsolate))->Dispose();
+	// Dispose of the isolate
+	//((Isolate *)(thisContext->threadIsolate))->Dispose();
+	{
+		std::lock_guard<std::mutex> lock(removedIsolatesMutex);
+		removedIsolates.push_back(isolate);
+	}
 
     // release the module map
     delete thisContext->moduleMap;
@@ -124,6 +132,14 @@ void Thread::ThreadDestroy(void* threadContext)
 
     // release the thread context memory
     free(threadContext);
+}
+
+void Thread::DestroyIsolates()
+{
+	std::lock_guard<std::mutex> lock(removedIsolatesMutex);
+	for (size_t i = 0; i < removedIsolates.size(); ++i)
+		removedIsolates[i]->Dispose();
+	removedIsolates.clear();
 }
 
 THREAD_WORK_ITEM* Thread::BuildWorkItem(Handle<Object> v8Object)
