@@ -4,6 +4,7 @@
     # npool .node
     {
         'target_name': 'npool',
+        'win_delay_load_hook': 'true',
         'sources': [
             'npool.cc',
             './source/thread.cc',
