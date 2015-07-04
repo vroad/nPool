@@ -71,18 +71,17 @@ class StringData : public IData {
 public:
 
     StringData(Handle<String> str)
+        : str(str)
     {
-        String::Utf8Value utf8Value(str);
-        this->str = *utf8Value;
     }
 
     Handle<Value> GetV8Value()
     {
         NanEscapableScope();
-        return NanEscapeScope(NanNew<String>(this->str.c_str(), this->str.size()));
+        return NanEscapeScope(NanNew<String>(*str, str.length()));
     }
 
-    string str;
+    String::Utf8Value str;
 };
 
 class Int32Data : public IData {
