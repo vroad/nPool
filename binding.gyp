@@ -15,7 +15,7 @@
             './source/ndlopen.cc',
             './source/nrequire.cc',
             './source/isolate_context.cc',
-            './source/structure.cpp'
+            './source/structure.cc'
         ],
 
         'include_dirs': [
