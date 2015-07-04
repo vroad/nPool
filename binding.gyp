@@ -13,7 +13,8 @@
             './source/utilities.cc',
             './source/ndlopen.cc',
             './source/nrequire.cc',
-            './source/isolate_context.cc'
+            './source/isolate_context.cc',
+            './source/structure.cpp'
         ],
 
         'include_dirs': [
