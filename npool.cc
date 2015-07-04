@@ -128,11 +128,11 @@ NAN_METHOD(DestoryThreadPool)
 
 NAN_METHOD(DestroyIsolates)
 {
-	NanScope();
+    NanScope();
 
-	Thread::DestroyIsolates();
+    Thread::DestroyIsolates();
 
-	NanReturnUndefined();
+    NanReturnUndefined();
 }
 
 NAN_METHOD(LoadFile)

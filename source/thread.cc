@@ -115,14 +115,14 @@ void Thread::ThreadDestroy(void* threadContext)
     }
 
     // exit the isolate
-	isolate->Exit();
+    isolate->Exit();
 
-	// Dispose of the isolate
-	//((Isolate *)(thisContext->threadIsolate))->Dispose();
-	{
-		std::lock_guard<std::mutex> lock(removedIsolatesMutex);
-		removedIsolates.push_back(isolate);
-	}
+    // Dispose of the isolate
+    //((Isolate *)(thisContext->threadIsolate))->Dispose();
+    {
+        std::lock_guard<std::mutex> lock(removedIsolatesMutex);
+        removedIsolates.push_back(isolate);
+    }
 
     // release the module map
     delete thisContext->moduleMap;
@@ -136,10 +136,10 @@ void Thread::ThreadDestroy(void* threadContext)
 
 void Thread::DestroyIsolates()
 {
-	std::lock_guard<std::mutex> lock(removedIsolatesMutex);
-	for (size_t i = 0; i < removedIsolates.size(); ++i)
-		removedIsolates[i]->Dispose();
-	removedIsolates.clear();
+    std::lock_guard<std::mutex> lock(removedIsolatesMutex);
+    for (size_t i = 0; i < removedIsolates.size(); ++i)
+        removedIsolates[i]->Dispose();
+    removedIsolates.clear();
 }
 
 THREAD_WORK_ITEM* Thread::BuildWorkItem(Handle<Object> v8Object)

@@ -69,7 +69,7 @@ class Thread
         static void*                ThreadInit();
         static void                 ThreadPostInit(void* threadContext);
         static void                 ThreadDestroy(void* threadContext);
-		static void                 DestroyIsolates();
+        static void                 DestroyIsolates();
 
         static THREAD_WORK_ITEM*    BuildWorkItem(Handle<Object> v8Object);
         static void                 QueueWorkItem(TASK_QUEUE_DATA *taskQueue, THREAD_WORK_ITEM *workItem);
