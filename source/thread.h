@@ -36,7 +36,7 @@ typedef struct THREAD_CONTEXT_STRUCT
 
     // v8
     Isolate*            threadIsolate;
-    Persistent<Context> threadJSContext;
+    Nan::Persistent<Context, v8::CopyablePersistentTraits<Context>> threadJSContext;
 
     // thread module cache
     ThreadModuleMap*    moduleMap;
@@ -52,13 +52,13 @@ typedef struct THREAD_WORK_ITEM_STRUCT
     IData*                  workParam;
 
     // callback and output object/function
-    Persistent<Object>      callbackContext;
-    Persistent<Function>    callbackFunction;
-    IData*                  callbackObject;
+    Nan::Persistent<Object, v8::CopyablePersistentTraits<Object>>     callbackContext;
+    Nan::Persistent<Function, v8::CopyablePersistentTraits<Function>> callbackFunction;
+    IData*                                                            callbackObject;
 
     // indicates error
     bool                    isError;
-    NanUtf8String*          jsException;
+    Nan::Utf8String*        jsException;
 
 } THREAD_WORK_ITEM;
 

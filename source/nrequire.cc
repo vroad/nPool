@@ -13,16 +13,16 @@
 
 NAN_METHOD(Require::RequireFunction)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
     // validate input
-    if((args.Length() != 1) || !args[0]->IsString())
+    if((info.Length() != 1) || !info[0]->IsString())
     {
-        return NanThrowError("Require::RequireFunction - Expects 1 arguments: 1) file name (string)");
+        return Nan::ThrowError("Require::RequireFunction - Expects 1 arguments: 1) file name (string)");
     }
 
     // get filename string
-    NanUtf8String fileName(args[0]);
+    Nan::Utf8String fileName(info[0]);
 
     // get handle to directory of current executing script
     #if NODE_VERSION_AT_LEAST(0, 12, 0)
@@ -30,8 +30,8 @@ NAN_METHOD(Require::RequireFunction)
     #else
     Handle<Object> currentContextObject = NanGetCurrentContext()->GetCalling()->Global();
     #endif
-    Handle<String> dirNameHandle = currentContextObject->Get(NanNew<String>("__dirname"))->ToString();
-    NanUtf8String __dirname(dirNameHandle);
+    Handle<String> dirNameHandle = currentContextObject->Get(Nan::New<String>("__dirname").ToLocalChecked())->ToString();
+    Nan::Utf8String __dirname(dirNameHandle);
 
     // allocate file buffer
     const FILE_INFO* fileInfo = Utilities::GetFileInfo(*fileName, *__dirname);
@@ -42,19 +42,19 @@ NAN_METHOD(Require::RequireFunction)
         std::string exceptionPrefix("Require::RequireFunction - File Name is invalid: ");
         std::string exceptionFileName(*fileName);
         std::string exceptionString = exceptionPrefix + exceptionFileName;
-        return NanThrowError(exceptionString.c_str());
+        return Nan::ThrowTypeError(exceptionString.c_str());
     }
     // file was read successfully
     else
     {
         // register external memory
-        NanAdjustExternalMemory(fileInfo->fileBufferLength);
+        Nan::AdjustExternalMemory(fileInfo->fileBufferLength);
 
         // get reference to calling context
-        Handle<Context> globalContext = NanGetCurrentContext();
+        Handle<Context> globalContext = Nan::GetCurrentContext();
 
         // create new module context
-        Local<Context> moduleContext = NanNew<Context>();
+        Local<Context> moduleContext = Nan::New<Context>();
 
         // set the security token to access calling context properties within new context
         moduleContext->SetSecurityToken(globalContext->GetSecurityToken());
@@ -77,14 +77,14 @@ NAN_METHOD(Require::RequireFunction)
             TryCatch scriptTryCatch;
 
             // compile the script
-            ScriptOrigin scriptOrigin(NanNew<String>(fileInfo->fileName));
+            ScriptOrigin scriptOrigin(Nan::New<String>(fileInfo->fileName).ToLocalChecked());
             #if NODE_VERSION_AT_LEAST(0, 11, 13)
-            Handle<UnboundScript> moduleScript = NanNew<NanUnboundScript>(
-                NanNew<String>(fileInfo->fileBuffer),
-                scriptOrigin);
+            Handle<UnboundScript> moduleScript = Nan::New<UnboundScript>(
+                Nan::New<String>(fileInfo->fileBuffer).ToLocalChecked(),
+                scriptOrigin).ToLocalChecked();
             #else
-            Handle<Script> moduleScript = NanNew<Script>(
-                NanNew<String>(fileInfo->fileBuffer),
+            Handle<Script> moduleScript = Nan::New<Script>(
+                Nan::New<String>(fileInfo->fileBuffer),
                 scriptOrigin);
             #endif
 
@@ -93,11 +93,11 @@ NAN_METHOD(Require::RequireFunction)
             {
                 Require::FreeFileInfo((FILE_INFO*)fileInfo);
                 scriptTryCatch.ReThrow();
-                NanReturnUndefined();
+                return;
             }
 
             //printf("[%u] Require::RequireFunction - Script Running: %s\n", SyncGetThreadId(), *fileName);
-            scriptResult = NanRunScript(moduleScript);
+            scriptResult = Nan::RunScript(moduleScript).ToLocalChecked();
             //printf("[%u] Require::RequireFunction - Script Completed: %s\n", SyncGetThreadId(), *fileName);
 
             // throw exception if script failed to execute
@@ -105,7 +105,7 @@ NAN_METHOD(Require::RequireFunction)
             {
                 Require::FreeFileInfo((FILE_INFO*)fileInfo);
                 scriptTryCatch.ReThrow();
-                NanReturnUndefined();
+                return;
             }
         }
 
@@ -114,13 +114,13 @@ NAN_METHOD(Require::RequireFunction)
         Require::FreeFileInfo((FILE_INFO*)fileInfo);
 
         // return module export(s)
-        Handle<Object> moduleObject = contextObject->Get(NanNew<String>("module"))->ToObject();
-        NanReturnValue(moduleObject->Get(NanNew<String>("exports")));
+        Handle<Object> moduleObject = contextObject->Get(Nan::New<String>("module").ToLocalChecked())->ToObject();
+        info.GetReturnValue().Set(moduleObject->Get(Nan::New<String>("exports").ToLocalChecked()));
     }
 }
 
 void Require::FreeFileInfo(FILE_INFO* fileInfo) {
     // free the file buffer and de-register memory
-    NanAdjustExternalMemory(-(fileInfo->fileBufferLength));
+    Nan::AdjustExternalMemory(-(fileInfo->fileBufferLength));
     Utilities::FreeFileInfo(fileInfo);
 }

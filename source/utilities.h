@@ -36,7 +36,7 @@ class Utilities
         static const char*      ReadFile(const char* fileName, int* fileSize);
 
         // exception handler
-        static NanUtf8String*   HandleException(TryCatch* tryCatch, bool createExceptionObject = false);
+        static Nan::Utf8String*   HandleException(TryCatch* tryCatch, bool createExceptionObject = false);
 
         // copy properties from one object to another
         static void             CopyObject(Handle<Object> toObject, Handle<Object> fromObject);

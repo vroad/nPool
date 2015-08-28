@@ -14,42 +14,42 @@ typedef void(*addon_init_func)(
 // when two contexts try to load the same shared object. Maybe have a shadow
 // cache that's a plain C list or hash table that's shared across contexts?
 NAN_METHOD(DLOpen::DLOpenFunction) {
-	NanScope();
-	static Local<String> exports_string = NanNew<String>("exports");
+	Nan::HandleScope scope;
+	static Local<String> exports_string = Nan::New<String>("exports").ToLocalChecked();
 	uv_lib_t lib;
 
-	if (args.Length() < 2) {
-		NanThrowError("dlopen takes exactly 2 arguments.");
+	if (info.Length() < 2) {
+		Nan::ThrowError("dlopen takes exactly 2 arguments.");
 		return;
 	}
 
-	Local<Object> module = args[0]->ToObject();  // Cast
-	String::Utf8Value filename(args[1]);  // Cast
+	Local<Object> module = info[0]->ToObject();  // Cast
+	String::Utf8Value filename(info[1]);  // Cast
 
 	Local<Object> exports = module->Get(exports_string)->ToObject();
 
 	if (uv_dlopen(*filename, &lib)) {
-		Local<String> errmsg = NanNew<String>(uv_dlerror(&lib));
+		Local<String> errmsg = Nan::New<String>(uv_dlerror(&lib)).ToLocalChecked();
 #ifdef _WIN32
 		// Windows needs to add the filename into the error message
-		errmsg = String::Concat(errmsg, args[1]->ToString());
+		errmsg = String::Concat(errmsg, info[1]->ToString());
 #endif  // _WIN32
-		NanThrowError(Exception::Error(errmsg));
+		Nan::ThrowError(Exception::Error(errmsg));
 		return;
 	}
 
-	String::Utf8Value name(args[2]);
+	String::Utf8Value name(info[2]);
 	addon_init_func func = 0;
 	if (uv_dlsym(&lib, "Init", (void**)&func)) {
-		Local<String> errmsg = NanNew<String>(uv_dlerror(&lib));
+		Local<String> errmsg = Nan::New<String>(uv_dlerror(&lib)).ToLocalChecked();
 #ifdef _WIN32
 		// Windows needs to add the filename into the error message
-		errmsg = String::Concat(errmsg, args[1]->ToString());
+		errmsg = String::Concat(errmsg, info[1]->ToString());
 #endif  // _WIN32
-		NanThrowError(Exception::Error(errmsg));
+		Nan::ThrowError(Exception::Error(errmsg));
 		return;
 	}
 	func(exports);
 	uv_dlclose(&lib);
-	NanReturnUndefined();
+	return;
 }

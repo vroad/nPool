@@ -11,7 +11,7 @@ public:
 
     ObjectStructure(Handle<Object> obj)
     {
-        NanScope();
+        Nan::HandleScope scope;
         Local<Array> keys = obj->GetPropertyNames();
         for (uint32_t i = 0; i < keys->Length(); ++i)
         {
@@ -32,12 +32,12 @@ public:
 
     Handle<Value> GetV8Value()
     {
-        NanEscapableScope();
-        Local<Object> obj = NanNew<Object>();
+        Nan::EscapableHandleScope scope;
+        Local<Object> obj = Nan::New<Object>();
         for (size_t i = 0; i < properties.size(); ++i)
             obj->Set(properties[i].first->GetV8Value(), properties[i].second->GetV8Value());
         
-        return NanEscapeScope(obj);
+        return scope.Escape(obj);
     }
 
     vector<pair<IData*, IData*>> properties;
@@ -55,12 +55,12 @@ public:
 
     Handle<Value> GetV8Value()
     {
-        NanEscapableScope();
-        Local<Array> arr = NanNew<Array>();
+        Nan::EscapableHandleScope scope;
+        Local<Array> arr = Nan::New<Array>();
         for (size_t i = 0; i < elements.size(); ++i)
             arr->Set(i, elements[i]->GetV8Value());
 
-        return NanEscapeScope(arr);
+        return scope.Escape(arr);
     }
 
     vector<IData*> elements;
@@ -77,8 +77,8 @@ public:
 
     Handle<Value> GetV8Value()
     {
-        NanEscapableScope();
-        return NanEscapeScope(NanNew<String>(*str, str.length()));
+        Nan::EscapableHandleScope scope;
+        return scope.Escape(Nan::New<String>(*str, str.length()).ToLocalChecked());
     }
 
     String::Utf8Value str;
@@ -95,8 +95,8 @@ public:
 
     Handle<Value> GetV8Value()
     {
-        NanEscapableScope();
-        return NanEscapeScope(NanNew<Int32>(integer));
+        Nan::EscapableHandleScope scope;
+        return scope.Escape(Nan::New<Int32>(integer));
     }
 
     int32_t integer;
@@ -113,8 +113,8 @@ public:
 
     Handle<Value> GetV8Value()
     {
-        NanEscapableScope();
-        return NanEscapeScope(NanNew<Uint32>(integer));
+        Nan::EscapableHandleScope scope;
+        return scope.Escape(Nan::New<Uint32>(integer));
     }
 
     uint32_t integer;
@@ -131,8 +131,8 @@ public:
 
     Handle<Value> GetV8Value()
     {
-        NanEscapableScope();
-        return NanEscapeScope(NanNew<Number>(number));
+        Nan::EscapableHandleScope scope;
+        return scope.Escape(Nan::New<Number>(number));
     }
 
     double number;
@@ -150,8 +150,8 @@ public:
 
     Handle<Value> GetV8Value()
     {
-        NanEscapableScope();
-        return NanEscapeScope(NanNew<Boolean>(boolValue));
+        Nan::EscapableHandleScope scope;
+        return scope.Escape(Nan::New<Boolean>(boolValue));
     }
 
     bool boolValue;
@@ -167,8 +167,8 @@ public:
 
     Handle<Value> GetV8Value()
     {
-        NanEscapableScope();
-        return NanEscapeScope(NanNull());
+        Nan::EscapableHandleScope scope;
+        return scope.Escape(Nan::Null());
     }
 };
 
@@ -182,8 +182,8 @@ public:
 
     Handle<Value> GetV8Value()
     {
-        NanEscapableScope();
-        return NanEscapeScope(NanUndefined());
+        Nan::EscapableHandleScope scope;
+        return scope.Escape(Nan::Undefined());
     }
 
 };
@@ -193,33 +193,25 @@ class TypedArrayData : public IData {
 public:
 
     TypedArrayData(Handle<TypedArray> value)
+        : contents(value->Buffer()->GetContents()), isUint8Array(value->IsUint8Array()), holder(value)
     {
-        data = value->GetIndexedPropertiesExternalArrayData();
-        length = value->GetIndexedPropertiesExternalArrayDataLength();
-        type = value->GetIndexedPropertiesExternalArrayDataType();
-        NanAssignPersistent(holder, value);
     }
 
     Handle<Value> GetV8Value()
     {
-        NanEscapableScope();
-        Handle<ArrayBuffer> ab = ArrayBuffer::New(Isolate::GetCurrent(), length);
+        Nan::EscapableHandleScope scope;
+        Handle<ArrayBuffer> ab = ArrayBuffer::New(Isolate::GetCurrent(), contents.ByteLength());
         Handle<TypedArray> ret;
-        switch (type)
-        {
-        case kExternalUint8Array:
-        default:
-            ret = Uint8Array::New(ab, 0, length);
-        }
-        memcpy(ret->GetIndexedPropertiesExternalArrayData(), data, length);
+        if (isUint8Array)
+            ret = Uint8Array::New(ab, 0, contents.ByteLength());
+        memcpy(ret->Buffer()->GetContents().Data(), contents.Data(), contents.ByteLength());
 
-        return NanEscapeScope(ret);
+        return scope.Escape(ret);
     }
 
-    void *data;
-    uint32_t length;
-    ExternalArrayType type;
-    Persistent<TypedArray> holder;
+    ArrayBuffer::Contents contents;
+    bool isUint8Array;
+    Nan::Persistent<TypedArray> holder;
 };
 
 IData *createDataFromValue(Handle<Value> value)

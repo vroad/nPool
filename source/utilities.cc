@@ -22,7 +22,7 @@
 
 char* Utilities::CreateCharBuffer(Handle<String> v8String)
 {
-    NanUtf8String bufferValue(v8String);
+    Nan::Utf8String bufferValue(v8String);
     char* charBuffer = (char*)malloc(bufferValue.length() + 1);
     memset(charBuffer, 0, bufferValue.length() + 1);
     memcpy(charBuffer, *bufferValue, bufferValue.length());
@@ -67,13 +67,13 @@ const char* Utilities::ReadFile(const char* fileName, int* fileSize)
 }
 
 // https://code.google.com/p/v8/source/browse/trunk/samples/shell.cc
-NanUtf8String* Utilities::HandleException(TryCatch* tryCatch, bool createExceptionObject)
+Nan::Utf8String* Utilities::HandleException(TryCatch* tryCatch, bool createExceptionObject)
 {
     // return value
-    NanUtf8String* exceptionSerialized = NULL;
+    Nan::Utf8String* exceptionSerialized = NULL;
 
     // create scope for exception
-    NanScope();
+    Nan::HandleScope scope;
 
     // get the exception message
     Handle<Message> exceptionMessage = tryCatch->Message();
@@ -84,8 +84,8 @@ NanUtf8String* Utilities::HandleException(TryCatch* tryCatch, bool createExcepti
         // build exception object if required
         if(createExceptionObject == true)
         {
-            Local<Object> exceptionObject = NanNew<Object>();
-            exceptionObject->Set(NanNew<String>("message"), tryCatch->Exception());
+            Local<Object> exceptionObject = Nan::New<Object>();
+            exceptionObject->Set(Nan::New<String>("message").ToLocalChecked(), tryCatch->Exception());
             exceptionSerialized = JsonUtility::Stringify(exceptionObject);
         }
     }
@@ -95,23 +95,23 @@ NanUtf8String* Utilities::HandleException(TryCatch* tryCatch, bool createExcepti
         // build exception object if required
         if(createExceptionObject == true)
         {
-            Local<Object> exceptionObject = NanNew<Object>();
+            Local<Object> exceptionObject = Nan::New<Object>();
 
-            exceptionObject->Set(NanNew<String>("message"), tryCatch->Message()->Get());
-            exceptionObject->Set(NanNew<String>("resourceName"), exceptionMessage->GetScriptResourceName());
-            exceptionObject->Set(NanNew<String>("lineNum"), NanNew<Number>(exceptionMessage->GetLineNumber()));
-            exceptionObject->Set(NanNew<String>("sourceLine"), exceptionMessage->GetSourceLine());
+            exceptionObject->Set(Nan::New<String>("message").ToLocalChecked(), tryCatch->Message()->Get());
+            exceptionObject->Set(Nan::New<String>("resourceName").ToLocalChecked(), exceptionMessage->GetScriptResourceName());
+            exceptionObject->Set(Nan::New<String>("lineNum").ToLocalChecked(), Nan::New<Number>(exceptionMessage->GetLineNumber()));
+            exceptionObject->Set(Nan::New<String>("sourceLine").ToLocalChecked(), exceptionMessage->GetSourceLine());
             // missing reference with 0.11.13
             #if !(NODE_VERSION_AT_LEAST(0, 11, 13))
-            exceptionObject->Set(NanNew<String>("scriptData"), exceptionMessage->GetScriptData());
+            exceptionObject->Set(Nan::New<String>("scriptData").ToLocalChecked(), exceptionMessage->GetScriptData());
             #endif
             if(!tryCatch->StackTrace().IsEmpty())
             {
-                exceptionObject->Set(NanNew<String>("stackTrace"), tryCatch->StackTrace());
+                exceptionObject->Set(Nan::New<String>("stackTrace").ToLocalChecked(), tryCatch->StackTrace());
             }
             else
             {
-                exceptionObject->Set(NanNew<String>("stackTrace"), NanNull());
+                exceptionObject->Set(Nan::New<String>("stackTrace").ToLocalChecked(), Nan::Null());
             }
 
             exceptionSerialized = JsonUtility::Stringify(exceptionObject);
@@ -137,7 +137,7 @@ void Utilities::PrintObjectProperties(Handle<Object> objectHandle)
     for (uint32_t keyIndex = 0; keyIndex < propertyKeys->Length(); keyIndex++)
     {
         Handle<v8::String> keyString = propertyKeys->Get(keyIndex)->ToString();
-        NanUtf8String propertyName(keyString);
+        Nan::Utf8String propertyName(keyString);
         fprintf(stdout, "[ Property %u ] %s\n", keyIndex, *propertyName);
     }
 }
