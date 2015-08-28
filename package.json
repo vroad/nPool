@@ -1,9 +1,9 @@
 {
   "preferGlobal": false,
   "name": "npool",
-  "version": "1.2.3",
+  "version": "1.4.3",
   "main": "./build/Release/npool.node",
-  "description": "A cross-platform thread pool add-on for Node.js",
+  "description": "A cross-platform thread pool add-on for Node.js and io.js",
   "keywords": [
     "c",
     "c++",
@@ -32,14 +32,14 @@
     "email": "ivan.hall@gmail.com"
   },
   "analyze": false,
-  "license": "BSD",
+  "license": "BSD-3-Clause",
   "os": [
     "darwin",
     "linux",
     "win32"
   ],
   "engines": {
-    "node": ">= 0.10.0"
+    "node": ">= 0.8.0"
   },
   "engine-strict": true,
   "devDependencies": {
@@ -49,6 +49,6 @@
     "test": "make test"
   },
   "dependencies": {
-    "nan": "2.0.0"
+    "nan": ">= 2.0.5"
   }
 }

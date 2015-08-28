@@ -20,7 +20,7 @@
 #include "synchronize.h"
 #include "json_utility.h"
 
-char* Utilities::CreateCharBuffer(Handle<String> v8String)
+char* Utilities::CreateCharBuffer(Local<String> v8String)
 {
     Nan::Utf8String bufferValue(v8String);
     char* charBuffer = (char*)malloc(bufferValue.length() + 1);
@@ -76,7 +76,7 @@ Nan::Utf8String* Utilities::HandleException(TryCatch* tryCatch, bool createExcep
     Nan::HandleScope scope;
 
     // get the exception message
-    Handle<Message> exceptionMessage = tryCatch->Message();
+    Local<Message> exceptionMessage = tryCatch->Message();
 
     // the exception message was not valid
     if (exceptionMessage.IsEmpty())
@@ -85,7 +85,7 @@ Nan::Utf8String* Utilities::HandleException(TryCatch* tryCatch, bool createExcep
         if(createExceptionObject == true)
         {
             Local<Object> exceptionObject = Nan::New<Object>();
-            exceptionObject->Set(Nan::New<String>("message").ToLocalChecked(), tryCatch->Exception());
+            Nan::Set(exceptionObject, Nan::New<String>("message").ToLocalChecked(), tryCatch->Exception());
             exceptionSerialized = JsonUtility::Stringify(exceptionObject);
         }
     }
@@ -96,22 +96,21 @@ Nan::Utf8String* Utilities::HandleException(TryCatch* tryCatch, bool createExcep
         if(createExceptionObject == true)
         {
             Local<Object> exceptionObject = Nan::New<Object>();
-
-            exceptionObject->Set(Nan::New<String>("message").ToLocalChecked(), tryCatch->Message()->Get());
-            exceptionObject->Set(Nan::New<String>("resourceName").ToLocalChecked(), exceptionMessage->GetScriptResourceName());
-            exceptionObject->Set(Nan::New<String>("lineNum").ToLocalChecked(), Nan::New<Number>(exceptionMessage->GetLineNumber()));
-            exceptionObject->Set(Nan::New<String>("sourceLine").ToLocalChecked(), exceptionMessage->GetSourceLine());
+            Nan::Set(exceptionObject, Nan::New<String>("message").ToLocalChecked(), tryCatch->Message()->Get());
+            Nan::Set(exceptionObject, Nan::New<String>("resourceName").ToLocalChecked(), exceptionMessage->GetScriptResourceName());
+            Nan::Set(exceptionObject, Nan::New<String>("lineNum").ToLocalChecked(), Nan::New<Number>(exceptionMessage->GetLineNumber()));
+            Nan::Set(exceptionObject, Nan::New<String>("sourceLine").ToLocalChecked(), exceptionMessage->GetSourceLine());
             // missing reference with 0.11.13
             #if !(NODE_VERSION_AT_LEAST(0, 11, 13))
-            exceptionObject->Set(Nan::New<String>("scriptData").ToLocalChecked(), exceptionMessage->GetScriptData());
+            Nan::Set(exceptionObject, Nan::New<String>("scriptData").ToLocalChecked(), exceptionMessage->GetScriptData());
             #endif
             if(!tryCatch->StackTrace().IsEmpty())
             {
-                exceptionObject->Set(Nan::New<String>("stackTrace").ToLocalChecked(), tryCatch->StackTrace());
+                Nan::Set(exceptionObject, Nan::New<String>("stackTrace").ToLocalChecked(), tryCatch->StackTrace());
             }
             else
             {
-                exceptionObject->Set(Nan::New<String>("stackTrace").ToLocalChecked(), Nan::Null());
+                Nan::Set(exceptionObject, Nan::New<String>("stackTrace").ToLocalChecked(), Nan::Null());
             }
 
             exceptionSerialized = JsonUtility::Stringify(exceptionObject);
@@ -121,24 +120,13 @@ Nan::Utf8String* Utilities::HandleException(TryCatch* tryCatch, bool createExcep
     return exceptionSerialized;
 }
 
-void Utilities::CopyObject(Handle<Object> toObject, Handle<Object> fromObject)
+void Utilities::CopyObject(Local<Object> toObject, Local<Object> fromObject)
 {
-    Local<Array> propertyKeys = fromObject->GetPropertyNames();
+    Local<Array> propertyKeys = Nan::GetPropertyNames(fromObject).ToLocalChecked();
     for (uint32_t keyIndex = 0; keyIndex < propertyKeys->Length(); keyIndex++)
     {
-        Handle<Value> propertyKey = propertyKeys->Get(keyIndex);
-        toObject->Set(propertyKey, fromObject->Get(propertyKey));
-    }
-}
-
-void Utilities::PrintObjectProperties(Handle<Object> objectHandle)
-{
-    Local<Array> propertyKeys = (*objectHandle)->GetPropertyNames();
-    for (uint32_t keyIndex = 0; keyIndex < propertyKeys->Length(); keyIndex++)
-    {
-        Handle<v8::String> keyString = propertyKeys->Get(keyIndex)->ToString();
-        Nan::Utf8String propertyName(keyString);
-        fprintf(stdout, "[ Property %u ] %s\n", keyIndex, *propertyName);
+        Local<Value> propertyKey = propertyKeys->Get(keyIndex);
+        Nan::Set(toObject, propertyKey, Nan::Get(fromObject, propertyKey).ToLocalChecked());
     }
 }
 

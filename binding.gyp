@@ -5,6 +5,7 @@
     {
         'target_name': 'npool',
         'win_delay_load_hook': 'true',
+
         'sources': [
             'npool.cc',
             './source/thread.cc',
@@ -53,6 +54,8 @@
     # thread pool library
     {
         'target_name': 'threadpool',
+        'win_delay_load_hook': 'false',
+
         'type': 'static_library',
 
         'include_dirs': [

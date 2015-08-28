@@ -1,9 +1,19 @@
+sudo: false
 language: node_js
+env:
+  - CXX=g++-4.8
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
 node_js:
   - "0.8"
   - "0.10"
   - "0.12"
+  - "iojs-v1"
+  - "iojs-v2"
   - "iojs"
-scripts:
-  - Building nPool add-on...
-  - npm rebuild
+before_install:
+  - $CXX --version

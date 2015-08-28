@@ -4,10 +4,8 @@
 // C++
 #ifdef __APPLE__
 #include <tr1/unordered_map>
-using namespace std::tr1;
 #else
 #include <unordered_map>
-using namespace std;
 #endif
 
 // node
@@ -23,42 +21,45 @@ using namespace v8;
 #include "task_queue.h"
 #include "thread_pool.h"
 
-#include "persistent_wrap.h"
 #include "structure.h"
 
 // thread module map
-typedef unordered_map<uint32_t, PersistentWrap*> ThreadModuleMap;
+#ifdef __APPLE__
+typedef std::tr1::unordered_map<uint32_t, Nan::Persistent<Object>*> ThreadModuleMap;
+#else
+typedef std::unordered_map<uint32_t, Nan::Persistent<Object>*> ThreadModuleMap;
+#endif
 
 typedef struct THREAD_CONTEXT_STRUCT
 {
     // libuv
-    uv_async_t*         uvAsync;
+    uv_async_t*                 uvAsync;
 
     // v8
-    Isolate*            threadIsolate;
-    Nan::Persistent<Context, v8::CopyablePersistentTraits<Context>> threadJSContext;
+    Isolate*                    threadIsolate;
+    Nan::Persistent<Context>*   threadJSContext;
 
     // thread module cache
-    ThreadModuleMap*    moduleMap;
+    ThreadModuleMap*            moduleMap;
 
 } THREAD_CONTEXT;
 
 typedef struct THREAD_WORK_ITEM_STRUCT
 {
     // work info and input object/function
-    uint32_t                workId;
-    uint32_t                fileKey;
-    char*                   workFunction;
-    IData*                  workParam;
+    uint32_t                    workId;
+    uint32_t                    fileKey;
+    char*                       workFunction;
+    IData*                      workParam;
 
     // callback and output object/function
-    Nan::Persistent<Object, v8::CopyablePersistentTraits<Object>>     callbackContext;
-    Nan::Persistent<Function, v8::CopyablePersistentTraits<Function>> callbackFunction;
-    IData*                                                            callbackObject;
+    Nan::Persistent<Object>*     callbackContext;
+    Nan::Callback*               callbackFunction;
+    IData*                       callbackObject;
 
     // indicates error
-    bool                    isError;
-    Nan::Utf8String*        jsException;
+    bool                        isError;
+    Nan::Utf8String*            jsException;
 
 } THREAD_WORK_ITEM;
 
@@ -71,7 +72,7 @@ class Thread
         static void                 ThreadDestroy(void* threadContext);
         static void                 DestroyIsolates();
 
-        static THREAD_WORK_ITEM*    BuildWorkItem(Handle<Object> v8Object);
+        static THREAD_WORK_ITEM*    BuildWorkItem(Local<Object> v8Object);
         static void                 QueueWorkItem(TASK_QUEUE_DATA *taskQueue, THREAD_WORK_ITEM *workItem);
 
     private:
@@ -81,7 +82,7 @@ class Thread
         static void             WorkItemCallback(TASK_QUEUE_WORK_DATA *taskData, void *threadContext, void *threadWorkItem);
 
         // worker object
-        static Handle<Object>   GetWorkerObject(THREAD_CONTEXT* thisContext, THREAD_WORK_ITEM* workItem);
+        static Local<Object>   GetWorkerObject(THREAD_CONTEXT* thisContext, THREAD_WORK_ITEM* workItem);
 
         // uv callbacks
         static void             uvCloseCallback(uv_handle_t* handle);

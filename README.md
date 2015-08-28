@@ -1,6 +1,6 @@
-# nPool [![Build Status](https://travis-ci.org/inh3/nPool.png)](https://travis-ci.org/inh3/nPool) [![NPM version](https://badge.fury.io/js/npool.png)](http://badge.fury.io/js/npool)
+# nPool [![NPM version](https://badge.fury.io/js/npool.png)](http://badge.fury.io/js/npool) [![Build Status](https://travis-ci.org/inh3/nPool.png)](https://travis-ci.org/inh3/nPool) [![Build status](https://ci.appveyor.com/api/projects/status/h11e52tnnk1a7gr3)](https://ci.appveyor.com/project/inh3/npool)
 
-A platform independent thread pool [add-on for Node.js](http://nodejs.org/api/addons.html).
+A platform independent thread pool add-on for [Node.js](http://nodejs.org/api/addons.html) and [io.js](https://iojs.org/api/addons.html).
 
 **nPool's primary features and benefits include:**
 
@@ -15,7 +15,16 @@ A platform independent thread pool [add-on for Node.js](http://nodejs.org/api/ad
  * Node.js [global object](http://nodejs.org/api/globals.html) support within background threads
    * `console.log`, `__filename`, `__dirname`, `require`
  * Verified and validated with a comprehensive [mocha](http://visionmedia.github.io/mocha/) test suite
- * Support for [Node.js](https://nodejs.org) 0.8/0.10/0.12 and [io.js](https://iojs.org)
+
+**Support for all stable [Node.js](https://nodejs.org) and [io.js](https://iojs.org) releases:**
+
+###### Node.js
+
+ * 0.8.x, 0.10.x, 0.12.x
+
+###### io.js
+
+ * 1.x.x, 2.x.x, 3.x.x
 
 ## Table of Contents
 
@@ -50,8 +59,7 @@ This will automatically configure the environment and produce the add-on module.
 
 **Requirements:**
 
-* Node.js 0.8/0.10/0.12, io.js
- * Node.js 0.8 is only supported for Mac and Linux
+* Node.js 0.8/0.10/0.12, io.js v1/v2/v3
 * Standard C and C++ libraries
  * Windows: C++11
  * Linux: C++0x/C++11
@@ -263,7 +271,7 @@ A `unitOfWorkObject` contains the following named properties:
  * `workParam` *object* - This is user defined object that is the input for the task.  The object will be passed as the only parameter to the object instance method that is executed in the thread pool.  Any function properties on the object will not be available when it is used in the thread pool because serialization does not support packing functions.
 
  * `callbackFunction` *function* - This property specifies the work complete callback function.  The function is executed on the main Node.js thread.
-The work complete callback function takes two parameters:
+The work complete callback function takes the following parameters:
   * `callbackObject` *object* - the object that is returned by the `workFunction`
   * `workId` *uint32* -  the unique identifier, `workId`, that was passed with the unit of work when it was queued
   * `exceptionObject` *object* -  the object that contains exception information
